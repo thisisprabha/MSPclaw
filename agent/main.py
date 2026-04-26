@@ -25,8 +25,16 @@ load_dotenv()
 
 
 def _machine_id() -> str:
-    """Stable per-machine identifier. Replace with a persisted UUID file in v1.1."""
-    return f"{socket.gethostname()}-{uuid.getnode()}"
+    """Persisted UUID under ~/.mspclaw/machine_id."""
+    import uuid
+    from pathlib import Path
+    p = Path.home() / ".mspclaw" / "machine_id"
+    if p.exists():
+        return p.read_text().strip()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    new_id = f"{socket.gethostname().lower()}-{uuid.uuid4().hex[:8]}"
+    p.write_text(new_id)
+    return new_id
 
 
 async def main() -> None:
