@@ -1,0 +1,36 @@
+---FEWSHOT---
+
+USER:
+Subject: VPN not connecting
+Description: User unable to connect after Windows update; error says authentication failed.
+
+ASSISTANT:
+{"issue":"VPN authentication failure after Windows update","possibleCauses":["Cached VPN credentials outdated after update","VPN client or adapter needs repair","Corporate certificate or MFA token out of sync","Split tunnel or firewall blocking VPN handshake"],"resolutionSteps":["Ask user to fully quit the VPN app, reboot, and retry with current password or SSO sign-in.","Clear saved VPN credentials: Windows Settings → Network & Internet → VPN → remove/re-add profile or use 'Forget' if available, then reconnect.","Repair or reinstall the VPN client from IT-approved source; ensure latest version matches OS build.","If MFA is used, re-enroll or approve push in the authenticator app; try off corporate Wi-Fi once to rule out captive portal issues.","Escalate to network team with exact error code, time of failure, and whether other users on same build are affected."],"suggestedActions":[]}
+
+USER:
+Subject: Outlook not sending mail
+Description: Emails stuck in Outbox; user on laptop, works on phone on same account.
+
+ASSISTANT:
+{"issue":"Outlook desktop not sending mail while mobile works","possibleCauses":["Offline mode or connectivity in Outlook desktop","Corrupt Outbox or stuck send/receive","Authentication prompt hidden or expired cached credentials","Add-in or antivirus scanning blocking SMTP submission"],"resolutionSteps":["Confirm Outlook is online (Send/Receive tab → Work Offline off).","Run Send/Receive All Folders; move any stuck item from Outbox to Drafts and resend one test message.","Sign out of Office account in Outlook → Account settings, sign back in; or remove and re-add the profile if policy allows.","Start Outlook in safe mode (outlook.exe /safe) to test without add-ins; disable suspect add-ins if send works.","If still failing, capture exact bounce or sync error and check mailbox size/retention; escalate with HAR or Outlook logs if required."],"suggestedActions":[]}
+
+USER:
+Subject: Printer offline
+Description: User sees printer as offline on Windows 11, was working yesterday.
+
+ASSISTANT:
+{"issue":"Windows shows printer offline","possibleCauses":["Printer powered off or sleep","USB or network cable/Wi-Fi issue","Print spooler stuck or bad job","Wrong default printer or driver glitch after update"],"resolutionSteps":["Verify printer power and ready state; print a configuration page from the device if network printer.","For network printers, ping printer IP or open its web UI; reconnect to correct Wi-Fi or Ethernet.","Restart Print Spooler service; clear queue: cancel all documents, delete stuck jobs, retry test page.","Remove printer and add again using IP or correct driver; set as default if needed.","If shared printer, confirm server/print queue status with IT."],"suggestedActions":[]}
+
+USER:
+Subject: SSO login loop
+Description: User clicks company SSO, redirects forever, Chrome only; Edge works.
+
+ASSISTANT:
+{"issue":"SSO redirect loop in Chrome only","possibleCauses":["Corrupt site data or cookies for IdP","Extension blocking redirects or third-party cookies","Outdated Chrome or broken profile","Clock skew or VPN interfering with auth"],"resolutionSteps":["Clear cookies and site data for the SSO and IdP domains only (avoid wiping all data first).","Try Incognito with extensions disabled; if it works, disable extensions one by one.","Update Chrome; reset Chrome settings or create a new Chrome profile as a test.","Verify system time/timezone; disconnect VPN temporarily and retry.","If Edge works, compare Chrome policies; involve identity team with HAR capture if issue persists."],"suggestedActions":[]}
+
+USER:
+Subject: Laptop fan loud and hot
+Description: Fan spins constantly, chassis hot, started this week.
+
+ASSISTANT:
+{"issue":"Laptop overheating and fan always on","possibleCauses":["Dust-clogged vents or failed fan","Runaway process high CPU (indexer, browser tabs, malware scan)","Background update or crypto-mining malware","Thermal paste degradation on older hardware"],"resolutionSteps":["Shut down, cool on hard surface; blow dust from vents with short compressed air bursts (no spinning fan blades).","Open Task Manager → sort by CPU; end obvious runaway tasks; note process names for escalation.","Ensure BIOS and OS updates applied; check for pending firmware thermal fixes from vendor.","Run full malware scan; verify no unknown miners or browser extensions.","If hardware cleaning does not help, schedule hardware check for fan replacement or thermal service."],"suggestedActions":[]}

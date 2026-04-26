@@ -1,0 +1,36 @@
+id: macos-slow
+description: Mac is slow — performance bottleneck triage
+match:
+  keywords: [slow, sluggish, lag, freeze, slowness, hanging, unresponsive]
+  os: macos
+
+escalation:
+  L1:
+    intent: |
+      Diagnose CPU/memory bottlenecks. Identify top resource hogs.
+      Suggest closing heavy apps to the end-user. Read-only.
+    tools:
+      - get_system_info
+      - list_top_processes
+      - check_disk_usage
+
+  L2:
+    intent: |
+      In addition to L1: clear user-level caches and restart non-system
+      heavy services. Any destructive action requires the YES gate.
+    tools:
+      - get_system_info
+      - list_top_processes
+      - check_disk_usage
+      - check_temp_files
+      - run_safe_command
+    requires_human_approval: false
+
+  L3:
+    intent: |
+      Deep diagnostics. May propose dynamic Python fixes for unusual
+      cases. ALL destructive actions require MSP technician approval —
+      not just the end-user's YES.
+    tools:
+      - "*"
+    requires_human_approval: true
