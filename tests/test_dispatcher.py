@@ -36,3 +36,18 @@ async def test_dispatch_unknown_agent_raises():
     d = Dispatcher()
     with pytest.raises(RuntimeError, match="not connected"):
         await d.dispatch("missing", job_id="j1", step_no=1, tool="x", args={})
+
+
+@pytest.mark.asyncio
+async def test_dispatch_fails_when_agent_disconnects():
+    d = Dispatcher()
+    ws = FakeWS()
+    d.register_agent("mac-1", ws)
+
+    async def disconnect_later():
+        await asyncio.sleep(0.01)
+        d.unregister_agent("mac-1")
+
+    asyncio.create_task(disconnect_later())
+    with pytest.raises(RuntimeError, match="disconnected"):
+        await d.dispatch("mac-1", job_id="j1", step_no=1, tool="get_system_info", args={})

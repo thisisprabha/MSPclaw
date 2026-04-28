@@ -19,15 +19,33 @@ Key = Tuple[str, int]
 class Dispatcher:
     _agents: Dict[str, Any] = field(default_factory=dict)
     _pending: Dict[Key, asyncio.Future] = field(default_factory=dict)
+    _job_to_machine: Dict[str, str] = field(default_factory=dict)
 
     def register_agent(self, machine_id: str, ws: Any) -> None:
         self._agents[machine_id] = ws
 
     def unregister_agent(self, machine_id: str) -> None:
+        self.fail_pending_for_agent(machine_id)
         self._agents.pop(machine_id, None)
+        self._job_to_machine = {jid: mid for jid, mid in self._job_to_machine.items() if mid != machine_id}
 
     def is_connected(self, machine_id: str) -> bool:
         return machine_id in self._agents
+
+    def fail_pending_for_agent(self, machine_id: str) -> int:
+        """Fail every pending future whose job is bound to this machine.
+        Returns count of futures failed."""
+        keys_to_fail = [
+            (jid, sn) for (jid, sn) in self._pending
+            if self._job_to_machine.get(jid) == machine_id
+        ]
+        n = 0
+        for key in keys_to_fail:
+            fut = self._pending.get(key)
+            if fut and not fut.done():
+                fut.set_exception(RuntimeError(f"agent {machine_id!r} disconnected"))
+                n += 1
+        return n
 
     async def dispatch(self, machine_id: str, *, job_id: str, step_no: int,
                        tool: str, args: dict, requires_yes: bool = False,
@@ -39,6 +57,7 @@ class Dispatcher:
         loop = asyncio.get_running_loop()
         future: asyncio.Future = loop.create_future()
         self._pending[(job_id, step_no)] = future
+        self._job_to_machine[job_id] = machine_id
 
         await ws.send_json({
             "type": "dispatch",
@@ -53,6 +72,7 @@ class Dispatcher:
             return await asyncio.wait_for(future, timeout=timeout)
         finally:
             self._pending.pop((job_id, step_no), None)
+            self._job_to_machine.pop(job_id, None)
 
     async def handle_result(self, msg: dict) -> None:
         key = (msg.get("job_id"), msg.get("step_no"))
