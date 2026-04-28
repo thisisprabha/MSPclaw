@@ -1,7 +1,7 @@
 """Ticket intake parser.
 
-Ported from gpt-doc/ownclaw/brain/llm.js. Takes a raw ticket (subject + body
-or free-form CLI text) and returns a structured plan:
+Takes a raw ticket (subject + body or free-form CLI text) and returns a
+structured plan:
 
     {
       "issue": str,
@@ -10,8 +10,11 @@ or free-form CLI text) and returns a structured plan:
       "suggestedActions": [str, ...]
     }
 
-This is the shape the brain (server/brain/loop.py) consumes when deciding
+This is the shape `server/brain/orchestrator.py` consumes when deciding
 which playbook + escalation level to apply.
+
+LLM provider is selected by `MSPCLAW_LLM_PROVIDER` (openai | gemini |
+anthropic), same env var used by the brain. Default = openai.
 """
 
 from __future__ import annotations
@@ -21,9 +24,6 @@ import os
 import re
 from pathlib import Path
 from typing import Any, Optional
-
-from google import genai
-from google.genai import types
 
 _PROMPT_DIR = Path(__file__).parent
 _SYSTEM_FILE = _PROMPT_DIR / "prompt_system.txt"
@@ -69,6 +69,85 @@ def _normalize(plan: dict) -> dict:
     }
 
 
+# --- Provider adapters -------------------------------------------------------
+# Each adapter sends a (system, user) pair and returns a JSON string. Lazy
+# imports so an unselected provider's missing SDK never breaks startup.
+
+
+def _send_openai(system: str, user: str) -> str:
+    from openai import OpenAI
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+    client = OpenAI(api_key=api_key)
+    model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        temperature=0.4,
+        response_format={"type": "json_object"},
+    )
+    return (resp.choices[0].message.content or "").strip()
+
+
+def _send_gemini(system: str, user: str) -> str:
+    from google import genai
+    from google.genai import types
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY (or GOOGLE_API_KEY) not set")
+    client = genai.Client(api_key=api_key)
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    config = types.GenerateContentConfig(
+        system_instruction=system,
+        temperature=0.4,
+        response_mime_type="application/json",
+    )
+    resp = client.models.generate_content(model=model, contents=user, config=config)
+    return (resp.text or "").strip()
+
+
+def _send_anthropic(system: str, user: str) -> str:
+    import anthropic
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise RuntimeError("ANTHROPIC_API_KEY not set")
+    client = anthropic.Anthropic(api_key=api_key)
+    model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5")
+    resp = client.messages.create(
+        model=model,
+        system=system + "\n\nReply with ONLY a JSON object — no prose, no markdown fences.",
+        messages=[{"role": "user", "content": user}],
+        max_tokens=1024,
+        temperature=0.4,
+    )
+    blocks = getattr(resp, "content", [])
+    for b in blocks:
+        if getattr(b, "type", None) == "text":
+            return (b.text or "").strip()
+    return ""
+
+
+def _send(system: str, user: str) -> str:
+    provider = os.environ.get("MSPCLAW_LLM_PROVIDER", "openai").lower()
+    if provider == "openai":
+        return _send_openai(system, user)
+    if provider == "gemini":
+        return _send_gemini(system, user)
+    if provider == "anthropic":
+        return _send_anthropic(system, user)
+    raise RuntimeError(
+        f"unknown MSPCLAW_LLM_PROVIDER: {provider!r} "
+        f"(expected: openai, gemini, anthropic)"
+    )
+
+
+# --- Public API --------------------------------------------------------------
+
+
 def parse_ticket(
     subject: str,
     description: str,
@@ -77,12 +156,7 @@ def parse_ticket(
     last_description: Optional[str] = None,
     last_issue: Optional[str] = None,
 ) -> dict:
-    """Turn a ticket into a structured plan."""
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY (or GOOGLE_API_KEY) not set")
-
-    model_id = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite-preview")
+    """Turn a ticket into a structured plan via the configured LLM provider."""
     system_text = _load_prompt_bundle()
 
     memory_block = ""
@@ -96,23 +170,10 @@ def parse_ticket(
 
     user_text = f"Subject: {subject}\nDescription: {description}{memory_block}"
 
-    client = genai.Client(api_key=api_key)
-    config = types.GenerateContentConfig(
-        system_instruction=system_text,
-        temperature=0.4,
-        response_mime_type="application/json",
-    )
+    raw = _send(system_text, user_text)
+    if not raw:
+        raise RuntimeError("Empty LLM response from intake parser")
 
-    def _send(prompt: str) -> str:
-        resp = client.models.generate_content(
-            model=model_id, contents=prompt, config=config
-        )
-        text = resp.text or ""
-        if not text:
-            raise RuntimeError("Empty LLM response")
-        return text
-
-    raw = _send(user_text)
     try:
         parsed = json.loads(_extract_json(raw))
     except json.JSONDecodeError:
@@ -120,14 +181,14 @@ def parse_ticket(
 
     if not _validate(parsed):
         snippet = raw if len(raw) <= 2000 else raw[:2000] + "…"
-        repair = (
+        repair_user = (
             "Your previous reply was invalid JSON or missing required fields. "
             "Prior output:\n" + snippet + "\n\nReply with ONLY one JSON object "
             "with keys: issue (string), possibleCauses (non-empty array of strings), "
             "resolutionSteps (non-empty array of strings), suggestedActions "
             "(array, may be []). No markdown fences."
         )
-        raw = _send(repair)
+        raw = _send(system_text, repair_user)
         try:
             parsed = json.loads(_extract_json(raw))
         except json.JSONDecodeError as e:
