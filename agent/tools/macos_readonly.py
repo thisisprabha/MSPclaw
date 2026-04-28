@@ -1,4 +1,4 @@
-"""Read-only macOS sensors (subprocess allowlist only)."""
+"""Read-only macOS sensors for MSPclaw agent (subprocess allowlist only)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,6 @@ import os
 import platform
 import subprocess
 from pathlib import Path
-
-from crewai.tools import tool
 
 _SUBPROC_TIMEOUT = 45
 
@@ -29,7 +27,6 @@ def _run_allowlisted(args: list[str]) -> tuple[str, str, int]:
         return "", str(e), -1
 
 
-@tool
 def get_power_battery_info() -> str:
     """Read-only macOS power/battery summary: pmset + system_profiler (no writes).
 
@@ -91,7 +88,6 @@ def _safe_user_path(user_path: str) -> Path | None:
     return p
 
 
-@tool
 def get_path_disk_usage(path: str) -> str:
     """Read-only shallow size summary for a path under the user home directory.
 

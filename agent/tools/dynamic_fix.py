@@ -9,8 +9,6 @@ import re
 import textwrap
 from typing import Any
 
-from crewai.tools import tool
-
 ALLOWED_MODULES = frozenset({"psutil", "subprocess", "os", "shutil", "json", "sys"})
 
 _SUDO_IN_STRING = re.compile(r"\bsudo\b", re.IGNORECASE)
@@ -218,7 +216,6 @@ def is_dynamic_fix_approved() -> bool:
     return os.environ.get("REPAIRCRAFT_DYNAMIC_FIX_APPROVED", "0") == "1"
 
 
-@tool
 def run_dynamic_fix_code(code: str) -> str:
     """Run LLM-generated Python only when explicitly approved for this run."""
     approved = is_dynamic_fix_approved()

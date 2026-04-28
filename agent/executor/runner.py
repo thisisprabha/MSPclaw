@@ -19,7 +19,7 @@ def _registry() -> Dict[str, Callable[..., Any]]:
     return {
         "get_system_info": telemetry.get_system_stats,
         "list_top_processes": telemetry.list_top_processes,
-        "check_disk_usage": telemetry.get_path_disk_usage,
+        "check_disk_usage": macos_readonly.get_path_disk_usage,
         "check_temp_files": telemetry.check_temp_files,
         "list_installed_apps": inventory_macos.list_installed_apps,
         "list_brew_installed": inventory_macos.list_brew_installed,

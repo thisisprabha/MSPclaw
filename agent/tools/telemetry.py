@@ -1,4 +1,4 @@
-"""psutil-based system telemetry tools for CrewAI."""
+"""psutil-based system telemetry tools for MSPclaw agent."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ import tempfile
 from pathlib import Path
 
 import psutil
-from crewai.tools import tool
 
 
 def _system_disk_path() -> str:
@@ -17,7 +16,6 @@ def _system_disk_path() -> str:
     return "/"
 
 
-@tool
 def get_system_stats() -> str:
     """Return CPU, RAM, and main disk usage as percentages with brief context."""
     cpu = psutil.cpu_percent(interval=0.5)
@@ -39,7 +37,6 @@ def get_system_stats() -> str:
     )
 
 
-@tool
 def list_top_processes() -> str:
     """Return the top 5 processes by resident memory (RSS) with PID and name."""
     procs: list[tuple[int, str, float]] = []
@@ -111,7 +108,6 @@ def _dir_size_limited(root: Path, max_depth: int = 2, _depth: int = 0) -> tuple[
     return total, errors
 
 
-@tool
 def check_temp_files() -> str:
     """Estimate total size of common temp/cache directories (limited-depth walk)."""
     parts: list[str] = []

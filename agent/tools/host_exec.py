@@ -5,8 +5,6 @@ from __future__ import annotations
 import re
 import subprocess
 
-from crewai.tools import tool
-
 from repaircraft.config import HOST_COMMAND_TIMEOUT_SEC
 
 _BLOCK_PATTERNS: tuple[tuple[str, str], ...] = (
@@ -34,7 +32,6 @@ def _check_command(command: str) -> str | None:
     return None
 
 
-@tool
 def run_host_command(command: str) -> str:
     """Run a host shell command directly for learning workflows.
 

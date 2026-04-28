@@ -1,4 +1,4 @@
-"""macOS read-only inventory tools for RepairCraft.
+"""macOS read-only inventory tools for MSPclaw agent.
 
 These tools are intended for *information only* (no writes). They may run a
 small number of fixed OS commands (brew list, npm -g ls) and parse their
@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import Iterable, Iterator
 
 import psutil
-from crewai.tools import tool
 
 
 def _darwin_only(msg: str) -> str:
@@ -77,7 +76,6 @@ def _read_app_info(app_path: Path) -> tuple[str, str] | None:
     return str(name), str(bundle_id)
 
 
-@tool
 def list_installed_apps() -> str:
     """List installed macOS apps from ~/Applications and /Applications.
 
@@ -108,7 +106,6 @@ def list_installed_apps() -> str:
     return "\n".join(lines)
 
 
-@tool
 def list_brew_installed() -> str:
     """List Homebrew-installed formulae/casks (if brew exists)."""
     if platform.system() != "Darwin":
@@ -146,7 +143,6 @@ def list_brew_installed() -> str:
     return "\n".join(lines)
 
 
-@tool
 def list_npm_global_installed() -> str:
     """List global npm packages (if npm exists)."""
     if platform.system() != "Darwin":
@@ -219,7 +215,6 @@ def _parse_lsappinfo_list(text: str) -> list[_LastSeen]:
     return out
 
 
-@tool
 def estimate_unused_apps(days: int = 30) -> str:
     """Best-effort estimate of apps “unused” for N days using lsappinfo checkin time.
 
@@ -256,7 +251,6 @@ def estimate_unused_apps(days: int = 30) -> str:
     return "\n".join(lines)
 
 
-@tool
 def get_today_usage_proxies(hours: int = 24) -> str:
     """Best-effort “today usage” proxy from process start times.
 
@@ -302,7 +296,6 @@ def get_today_usage_proxies(hours: int = 24) -> str:
     return "\n".join(lines)
 
 
-@tool
 def get_purchase_date_hint() -> str:
     """Return purchase-date hints (cannot be reliably read from macOS alone)."""
     if platform.system() != "Darwin":
