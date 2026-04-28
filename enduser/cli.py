@@ -13,8 +13,12 @@ from pathlib import Path
 
 import httpx
 import typer
+from dotenv import load_dotenv
 from rich import print
 from rich.markdown import Markdown
+
+# Load .env from the repo root (parent of enduser/) so MSPCLAW_API_URL is picked up.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 app = typer.Typer(help="MSPclaw — end-user self-service")
 
