@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 
-from repaircraft.config import HOST_COMMAND_TIMEOUT_SEC
+# v0.2 will source this from a central agent config; for v0.1 we honor the
+# same env var the server uses for its execution timeout, with a sane default.
+HOST_COMMAND_TIMEOUT_SEC = int(os.environ.get("MSPCLAW_EXECUTION_TIMEOUT_SEC", "30"))
 
 _BLOCK_PATTERNS: tuple[tuple[str, str], ...] = (
     (r"(^|\s)sudo(\s|$)", "sudo escalation is blocked"),
