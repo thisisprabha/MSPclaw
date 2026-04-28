@@ -27,6 +27,14 @@ CATALOG: dict[str, dict] = {
         "description": "Inventory of installed macOS applications.",
         "args_schema": {},
     },
+    "list_brew_installed": {
+        "description": "List packages installed via Homebrew (formulae and casks).",
+        "args_schema": {},
+    },
+    "get_power_battery_info": {
+        "description": "Battery health, charge level, and power source on macOS.",
+        "args_schema": {},
+    },
     "run_safe_command": {
         "description": "Run an allowlisted read-only shell command.",
         "args_schema": {"cmd": "string (allowlisted only)"},
