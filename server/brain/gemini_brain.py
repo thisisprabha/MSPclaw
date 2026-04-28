@@ -6,6 +6,7 @@ for short sessions (max 8 steps). Add caching when latency matters.
 """
 from __future__ import annotations
 
+import asyncio
 import os
 
 from google import genai
@@ -31,7 +32,12 @@ class GeminiBrain:
                 contents.append(f"SYSTEM NOTE: {h['content']}")
 
         config = types.GenerateContentConfig(temperature=0.3)
-        resp = self._client.models.generate_content(
-            model=self._model, contents="\n\n".join(contents), config=config,
-        )
-        return (resp.text or "").strip()
+        joined = "\n\n".join(contents)
+
+        def _call():
+            resp = self._client.models.generate_content(
+                model=self._model, contents=joined, config=config,
+            )
+            return (resp.text or "").strip()
+
+        return await asyncio.to_thread(_call)

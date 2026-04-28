@@ -8,7 +8,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 
-from server.brain.gemini_brain import GeminiBrain
+# Brain adapters imported lazily inside _brain() so an unselected provider's
+# missing API key never breaks startup.
 from server.brain.orchestrator import Orchestrator
 from server.connections.ws_manager import ConnectionManager
 from server.intake.parser import parse_ticket
@@ -24,10 +25,25 @@ playbooks = PlaybookRegistry.load(Path(__file__).parent.parent / "playbooks")
 brain = None  # lazy: tests don't need the API key
 
 
-def _brain() -> GeminiBrain:
+def _brain():
+    """Return a singleton Brain instance for the configured provider."""
     global brain
     if brain is None:
-        brain = GeminiBrain()
+        provider = os.environ.get("MSPCLAW_LLM_PROVIDER", "openai").lower()
+        if provider == "openai":
+            from server.brain.openai_brain import OpenAIBrain
+            brain = OpenAIBrain()
+        elif provider == "gemini":
+            from server.brain.gemini_brain import GeminiBrain
+            brain = GeminiBrain()
+        elif provider == "anthropic":
+            from server.brain.anthropic_brain import AnthropicBrain
+            brain = AnthropicBrain()
+        else:
+            raise RuntimeError(
+                f"unknown MSPCLAW_LLM_PROVIDER: {provider!r} "
+                f"(expected one of: openai, gemini, anthropic)"
+            )
     return brain
 
 
