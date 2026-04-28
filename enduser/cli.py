@@ -22,7 +22,8 @@ app = typer.Typer(help="MSPclaw — end-user self-service")
 def _machine_id() -> str:
     p = Path.home() / ".mspclaw" / "machine_id"
     if not p.exists():
-        raise typer.Exit("Agent not registered yet. Start the agent first: `make agent`.")
+        print("[red]Agent not registered yet.[/red] Start the agent first: `mspclaw start` (or `make agent`).")
+        raise typer.Exit(1)
     return p.read_text().strip()
 
 
