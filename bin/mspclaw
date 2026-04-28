@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# MSPclaw end-user CLI wrapper. Installed at ~/.local/bin/mspclaw as a
+# symlink to <repo>/bin/mspclaw. Resolves the real repo root via the symlink.
+
+set -euo pipefail
+
+# Resolve symlink to find repo root.
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+REPO="$( cd "$BIN_DIR/.." && pwd )"
+PYTHON="$REPO/.venv/bin/python"
+PLIST="$HOME/Library/LaunchAgents/com.mspclaw.agent.plist"
+
+cmd="${1:-help}"; shift || true
+
+case "$cmd" in
+  issue)
+    if [[ $# -lt 1 ]]; then
+      echo "Usage: mspclaw issue \"describe your issue\""
+      exit 1
+    fi
+    "$PYTHON" -m enduser.cli issue "$@"
+    ;;
+  start)
+    if [[ -f "$PLIST" ]]; then
+      launchctl load "$PLIST" 2>/dev/null && echo "agent started" || echo "agent already running"
+    else
+      echo "No launchd plist found. Run install-client.command first, or start manually:"
+      echo "  cd $REPO && source .venv/bin/activate && python -m agent.main"
+    fi
+    ;;
+  stop)
+    if [[ -f "$PLIST" ]]; then
+      launchctl unload "$PLIST" 2>/dev/null && echo "agent stopped" || echo "agent not running"
+    else
+      echo "No launchd plist found."
+    fi
+    ;;
+  status)
+    # Agent process
+    if launchctl list 2>/dev/null | grep -q com.mspclaw.agent; then
+      echo "agent (launchd): loaded"
+    else
+      echo "agent (launchd): not loaded"
+    fi
+    # Server reachability
+    api_url="http://localhost:8080"
+    if [[ -f "$REPO/.env" ]] && grep -q '^MSPCLAW_API_URL=' "$REPO/.env"; then
+      api_url="$(grep '^MSPCLAW_API_URL=' "$REPO/.env" | head -1 | sed 's/^MSPCLAW_API_URL=//')"
+    fi
+    if command -v curl >/dev/null 2>&1; then
+      if curl -fsS --max-time 3 "$api_url/health" >/dev/null 2>&1; then
+        body="$(curl -fsS --max-time 3 "$api_url/health")"
+        echo "server ($api_url): reachable — $body"
+      else
+        echo "server ($api_url): UNREACHABLE"
+      fi
+    fi
+    # Machine ID
+    if [[ -f "$HOME/.mspclaw/machine_id" ]]; then
+      echo "machine_id: $(cat "$HOME/.mspclaw/machine_id")"
+    else
+      echo "machine_id: not set yet (first agent connection will create it)"
+    fi
+    ;;
+  logs)
+    log="$HOME/.mspclaw/logs/agent.err.log"
+    if [[ -f "$log" ]]; then
+      tail -n 50 -f "$log"
+    else
+      echo "No agent log found at $log"
+    fi
+    ;;
+  uninstall)
+    "$REPO/uninstall.command"
+    ;;
+  help|-h|--help)
+    cat <<EOF
+mspclaw — MSPclaw end-user CLI
+
+  mspclaw issue "..."   submit an issue ("my mac is slow")
+  mspclaw status        show agent + server health
+  mspclaw start         start the background agent
+  mspclaw stop          stop the background agent
+  mspclaw logs          tail the agent log
+  mspclaw uninstall     remove MSPclaw from this Mac
+
+EOF
+    ;;
+  *)
+    echo "Unknown command: $cmd"
+    echo "Run 'mspclaw help' for usage."
+    exit 1
+    ;;
+esac
