@@ -1,0 +1,42 @@
+id: endpoint-performance-slow
+description: Slow PC, performance issues, and endpoint health
+match:
+  keywords: [slow, sluggish, freeze, lag, freezing, performance, "running slow", "very slow", "cpu high", "memory high"]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Diagnose performance bottlenecks. Check CPU, RAM, disk usage,
+      running processes, and malware status. Identify top resource consumers.
+      Recommend safe cleanup steps user can do themselves.
+    tools:
+      - get_system_info
+      - list_top_processes
+      - check_disk_usage
+      - scan_for_malware
+
+  L2:
+    intent: |
+      Execute remediation: clear temp files and caches, restart services,
+      check for updates, verify device encryption and firewall.
+      Run malware scan. Stop high-CPU processes.
+    tools:
+      - get_system_info
+      - list_top_processes
+      - check_disk_usage
+      - check_temp_files
+      - restart_service
+      - list_updates_available
+      - check_device_encryption
+      - check_firewall_status
+      - scan_for_malware
+
+  L3:
+    intent: |
+      Advanced troubleshooting: force app uninstall, update drivers,
+      check hardware diagnostics, recommend device refresh or upgrades.
+      Escalate hardware failures to vendor support.
+    tools:
+      - "*"
+    requires_human_approval: true

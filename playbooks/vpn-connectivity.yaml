@@ -1,0 +1,38 @@
+id: vpn-remote-access
+description: VPN connectivity and remote access troubleshooting
+match:
+  keywords: [vpn, "remote access", "won't connect", "can't connect to vpn", "vpn connection", "internal apps"]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Diagnose VPN connectivity issues. Check account status, firewall
+      status, endpoint posture (AV, encryption, patches).
+      Verify MFA is enabled. Suggest basic troubleshooting.
+    tools:
+      - check_account_status
+      - check_firewall_status
+      - check_endpoint_posture
+      - verify_mfa_setup
+
+  L2:
+    intent: |
+      Execute intermediate troubleshooting: restart VPN service,
+      clear DNS cache, enable firewall if disabled, verify network
+      connectivity. Check email headers if suspicious.
+    tools:
+      - restart_service
+      - clear_dns_cache
+      - check_firewall_status
+      - enable_firewall
+      - list_top_processes
+
+  L3:
+    intent: |
+      Full VPN/network administration: modify firewall rules, reset
+      VPN credentials, check email headers for compromise,
+      invalidate sessions if suspected breach. Escalate to network team.
+    tools:
+      - "*"
+    requires_human_approval: true

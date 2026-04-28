@@ -1,0 +1,38 @@
+id: email-access-sync
+description: Email access, sync, and delivery issues
+match:
+  keywords: [email, mail, sync, delivery, "not receiving", "not sending", "bounce", "can't send", "can't receive", quarantine]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Diagnose email issue type (client sync vs delivery vs access).
+      Check mailbox size and quota. Verify MFA setup.
+      Identify bounces or quarantine holds. Read-only diagnostics.
+    tools:
+      - check_mailbox_size
+      - verify_mfa_setup
+      - search_quarantine
+
+  L2:
+    intent: |
+      Remediate client issues: clear email cache, verify SMTP settings,
+      check MFA setup. Release messages from quarantine.
+      Update client software if needed.
+    tools:
+      - check_mailbox_size
+      - clear_email_cache
+      - check_smtp_settings
+      - search_quarantine
+      - release_from_quarantine
+      - verify_mfa_setup
+
+  L3:
+    intent: |
+      Full email administration: reset passwords/tokens, invalidate sessions,
+      modify transport rules, manage spam policies. Escalate to messaging team
+      for tenant-wide incidents or DNS/SPF issues. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true

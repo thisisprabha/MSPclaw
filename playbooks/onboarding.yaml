@@ -1,0 +1,38 @@
+id: user-onboarding
+description: New user provisioning - accounts, devices, and access
+match:
+  keywords: [onboarding, "new hire", "new user", "new employee", provisioning, setup, "set up"]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Verify onboarding request and collect required data:
+      name, email alias, department, role, start date.
+      Provide checklist of steps and expected timeline to manager.
+      Read-only — no provisioning at this level.
+    tools:
+      - check_account_status
+      - list_user_groups
+
+  L2:
+    intent: |
+      Assign user to groups and roles. Enroll device in MDM.
+      Apply configuration profiles. Install standard app stack via
+      approved software packages. Document all actions.
+    tools:
+      - add_to_group
+      - list_user_groups
+      - enroll_in_mdm
+      - list_installed_profiles
+      - install_app
+      - verify_license
+
+  L3:
+    intent: |
+      Full provisioning authority: create user accounts in IdP/AD,
+      assign advanced access, configure specialized hardware/software profiles.
+      Can execute complex workflows and exception approvals. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true

@@ -1,0 +1,38 @@
+id: network-wifi-connectivity
+description: Network and Wi-Fi connectivity troubleshooting
+match:
+  keywords: [network, wifi, "wi-fi", internet, connectivity, "no internet", "can't access", offline, "internal resources"]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Diagnose connectivity scope (single device vs widespread).
+      Check network status, firewall, and DNS configuration.
+      Run basic connectivity tests. Check endpoint posture.
+    tools:
+      - get_system_info
+      - check_firewall_status
+      - run_safe_command
+
+  L2:
+    intent: |
+      Execute basic remediation: clear DNS cache, restart network services,
+      enable firewall if disabled, verify network configuration.
+      Suggest user-level troubleshooting (reboot, rejoin Wi-Fi).
+    tools:
+      - get_system_info
+      - clear_dns_cache
+      - restart_service
+      - check_firewall_status
+      - enable_firewall
+      - check_endpoint_posture
+
+  L3:
+    intent: |
+      Network administration: modify firewall rules, reconfigure network
+      settings, manage IP/VLAN assignments, coordinate with ISP.
+      Escalate backbone/gateway failures to network team. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true
