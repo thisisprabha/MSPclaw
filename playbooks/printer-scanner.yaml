@@ -1,0 +1,33 @@
+id: printer-scanner-issues
+description: Printer and scanner troubleshooting
+match:
+  keywords: [printer, print, scan, scanner, "can't print", "not printing", "scan to email", "scanner not working"]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Diagnose printer connectivity and configuration. Check if issue
+      is local (single user) or widespread. Identify hardware errors
+      or network connectivity problems. Read-only diagnostic.
+    tools:
+      - get_system_info
+      - run_safe_command
+
+  L2:
+    intent: |
+      Troubleshoot and remediate: power-cycle printer, remove/re-add
+      printer driver, verify network connectivity and DHCP/static IP,
+      test scan-to-email SMTP settings and authentication.
+    tools:
+      - get_system_info
+      - run_safe_command
+
+  L3:
+    intent: |
+      Advanced printer management: configure SNMP monitoring,
+      reconfigure network settings, manage firmware updates,
+      escalate hardware failures to vendor or facilities.
+    tools:
+      - "*"
+    requires_human_approval: true

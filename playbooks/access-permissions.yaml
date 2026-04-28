@@ -1,0 +1,37 @@
+id: access-permissions-shared-resources
+description: Account permissions and access to shared resources
+match:
+  keywords: [access, permission, "can't access", "no access", share, folder, group, "resource access", granted]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Verify access request and check current permissions. List user's
+      current groups and resource access. Review RBAC model.
+      Confirm manager approval. Read-only audit.
+    tools:
+      - check_resource_access
+      - list_user_groups
+      - list_resource_access
+
+  L2:
+    intent: |
+      Grant access: add user to appropriate groups, grant resource access,
+      assign roles. For temporary access, set expiration with automatic
+      removal. Validate permissions are propagated.
+    tools:
+      - check_resource_access
+      - list_user_groups
+      - add_to_group
+      - grant_access
+      - set_access_expiration
+
+  L3:
+    intent: |
+      Full access governance: modify RBAC policies, handle conflicting
+      approvals, manage sensitive resource access, create automation.
+      Escalate to data/app owners for authorization disputes. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true

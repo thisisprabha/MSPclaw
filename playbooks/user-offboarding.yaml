@@ -1,0 +1,37 @@
+id: user-offboarding-revocation
+description: User offboarding and access revocation
+match:
+  keywords: [offboarding, termination, resigned, "left company", "left the company", "access revocation", revoke, disable]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Verify termination details and timeline. List user's group
+      memberships, access rights, and devices. Audit assigned resources.
+      Plan revocation steps. Read-only audit only.
+    tools:
+      - list_user_groups
+      - list_resource_access
+      - check_account_status
+
+  L2:
+    intent: |
+      Execute planned offboarding: remove from groups, revoke access
+      to resources, disable account, invalidate sessions. Unenroll devices
+      from MDM. Document completion. Requires verified termination approval.
+    tools:
+      - remove_from_group
+      - revoke_access
+      - disable_user_account
+      - invalidate_sessions
+      - unenroll_from_mdm
+
+  L3:
+    intent: |
+      Full lifecycle termination: force session/token termination, remote-wipe
+      devices, archive email/files, handle legal holds, manage privileged
+      account revocation. Escalate to security for high-risk exits. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true

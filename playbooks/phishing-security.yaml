@@ -1,0 +1,39 @@
+id: phishing-security-incident
+description: Phishing detection, suspicious email, and security incident triage
+match:
+  keywords: [phishing, suspicious, malware, clicked, "suspicious link", "suspicious email", "malicious", security, breach, compromise]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Triage security incident. Collect email headers, URL, and attachment
+      info. Determine if user clicked/opened. Check URL reputation.
+      Advise user not to interact. Read-only analysis.
+    tools:
+      - check_email_headers
+      - check_url_reputation
+      - check_endpoint_posture
+
+  L2:
+    intent: |
+      Analyze email (headers, URL reputation, spam status). If benign,
+      educate user. If suspicious, guide password reset, verify MFA.
+      Search quarantine. Scan for malware on device.
+    tools:
+      - check_email_headers
+      - check_url_reputation
+      - verify_mfa_setup
+      - search_quarantine
+      - scan_for_malware
+      - reset_password
+
+  L3:
+    intent: |
+      Full incident response: invalidate sessions/tokens, run EDR scans,
+      quarantine suspicious files, search and purge similar messages
+      tenant-wide, extract indicators for threat intel. Escalate to
+      security/IR team for compromise investigation. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true

@@ -1,0 +1,38 @@
+id: software-install-update
+description: Software installation, updates, and license issues
+match:
+  keywords: [install, update, license, "install app", "software install", "license issue", "license expired", "not licensed", "stopped working after update"]
+  os: null
+
+escalation:
+  L1:
+    intent: |
+      Verify app is in approved software catalog. Check system
+      requirements, installed version, and license status.
+      Read-only catalog lookup and validation only.
+    tools:
+      - get_system_info
+      - list_installed_apps
+      - verify_license
+      - list_updates_available
+
+  L2:
+    intent: |
+      Deploy or update app: install from approved catalog, update existing
+      apps to latest version, verify license activation.
+      Check system requirements before proceeding.
+    tools:
+      - get_system_info
+      - list_installed_apps
+      - install_app
+      - list_updates_available
+      - verify_license
+
+  L3:
+    intent: |
+      Full software lifecycle: install from custom sources, uninstall apps,
+      configure app-specific settings, handle license exceptions,
+      escalate to vendor support for deep issues. Requires approval.
+    tools:
+      - "*"
+    requires_human_approval: true
