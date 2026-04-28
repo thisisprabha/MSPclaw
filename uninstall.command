@@ -7,7 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ -t 1 ]]; then
-  B="\033[1m"; G="\033[32m"; Y="\033[33m"; D="\033[2m"; N="\033[0m"
+  B=$'\033[1m'; G=$'\033[32m'; Y=$'\033[33m'; D=$'\033[2m'; N=$'\033[0m'
 else
   B=""; G=""; Y=""; D=""; N=""
 fi

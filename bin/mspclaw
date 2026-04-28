@@ -24,7 +24,7 @@ case "$cmd" in
       echo "Usage: mspclaw issue \"describe your issue\""
       exit 1
     fi
-    "$PYTHON" -m enduser.cli issue "$@"
+    "$PYTHON" -m enduser.cli "$@"
     ;;
   start)
     if [[ -f "$PLIST" ]]; then
@@ -42,8 +42,9 @@ case "$cmd" in
     fi
     ;;
   status)
-    # Agent process
-    if launchctl list 2>/dev/null | grep -q com.mspclaw.agent; then
+    # Agent process — check both launchctl list (older) and launchctl print (newer macOS)
+    if launchctl list 2>/dev/null | grep -q com.mspclaw.agent \
+       || launchctl print "gui/$(id -u)/com.mspclaw.agent" >/dev/null 2>&1; then
       echo "agent (launchd): loaded"
     else
       echo "agent (launchd): not loaded"
