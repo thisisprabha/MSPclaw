@@ -4,6 +4,28 @@
 
 MSPclaw is a self-hosted Remote Monitoring & Management platform built AI-first. Unlike traditional RMMs (NinjaOne, ConnectWise, Kaseya) that bolt AI onto script runners, MSPclaw uses an LLM reasoning loop as its core orchestrator — playbooks describe intent, the agent decides the steps, and a deployed daemon executes them safely on the end-user's machine.
 
+## Quickstart (macOS)
+
+**On the MSP's Mac mini:**
+```bash
+git clone https://github.com/prabha-thats-it/MSPclaw.git ~/MSPclaw
+cd ~/MSPclaw
+```
+Then double-click **`install-server.command`** in Finder. Pick a provider (`openai` default), paste your API key, done.
+
+**On any requester's MacBook:**
+```bash
+git clone https://github.com/prabha-thats-it/MSPclaw.git ~/MSPclaw
+cd ~/MSPclaw
+```
+Then double-click **`install-client.command`**. Enter the Mac mini's LAN address (e.g. `192.168.1.42:8080`), done.
+
+```bash
+mspclaw issue "my mac is slow"
+```
+
+Full guide: [docs/status/2026-04-28-quickstart.md](docs/status/2026-04-28-quickstart.md).
+
 ## Why MSPclaw
 
 | Traditional RMM | MSPclaw |
